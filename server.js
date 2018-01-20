@@ -1,6 +1,7 @@
 const express = require('express') 
 const logger = require('morgan')
 const errorhandler = require('errorhandler')
+const routes = require('./routes') 
 let app = express()
 
 let store = {}
@@ -22,51 +23,30 @@ let store = {}
 store.posts = []
 const bodyParser = require('body-parser')
 
+app.use((req, res, next) => {
+	req.store = store
+	next()
+})
+
 app.use(bodyParser.json())
 app.use(logger('dev'))
 app.use(errorhandler())
 
-app.get('/posts', (req, res) => {
-  res.status(200).send(store.posts)
-})
+app.get('/posts',routes.posts.getPosts)
 
-app.post('/posts', (req, res) => {
-  let newPost = req.body
-  let id = store.posts.length
-  store.posts.push(newPost)
-  res.status(201).send({id: id})
-})
-
-app.put('/posts/:id', (req, res) => {
-  store.posts[req.params.id] = req.body
-  res.status(200).send(store.posts[req.params.id])
-
-})
-
-app.delete('/posts/:id', (req, res) => {
-  store.posts.splice(req.params.id, 1)
-  res.status(204).send()
-})
-
-app.get('/posts/:postId/comments', (req, res) => {
-    res.status(200).send(store.posts[req.params.postId].comments)
-  })
+app.post('/posts',routes.posts.addPost)
   
-app.post('/posts/:postId/comments', (req, res) => {
-    let newPostComment = req.body
-    let id = store.posts[req.params.postId].comments.length
-    store.posts[req.params.postId].comments.push(newPostComment)
-    res.status(201).send({idComment: id})
-  })
+app.put('/posts/:postId',routes.posts.updatePost)
   
-app.put('/posts/:postId/comments/:commentId', (req, res) => {
-    store.posts[req.params.postId].comments[req.params.commentId] = req.body
-    res.status(200).send(store.posts[req.params.postId].comments[req.params.commentId])
-  })
+app.delete('/posts/:postId',routes.posts.removePost)
   
-app.delete('/posts/:postId/comments/:commentId', (req, res) => {
-    store.posts[req.params.postId].comments.splice(req.params.commentId, 1)
-    res.status(204).send()
-  })
+app.get('/posts/:postId/comments', routes.comments.getComments)
+  
+app.post('/posts/:postId/comments', routes.comments.addComment)
+  
+app.put('/posts/:postId/comments/:commentId',routes.comments.updateComment)
+  
+app.delete('/posts/:postId/comments/:commentId',routes.comments.removeComment)
+  
 
 app.listen(3000)
